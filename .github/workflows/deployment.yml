@@ -14,7 +14,7 @@ on:
     schedule:
         - cron: '0 9 * * *'
 env:
-    NODE_Version: 20
+    NODE_Version: 24
 
 jobs:
     test:
@@ -32,4 +32,34 @@ jobs:
               run: npm run lint
             - name: Test Code
               run: npm run test
-
+    build:
+        needs: test
+        runs-on: ubuntu-latest
+        steps:
+            - name: Get Code
+              uses: actions/checkout@v6
+            - name: setup node
+              uses: actions/setup-node@v4
+              with:
+                node-version: ${{ env.NODE_Version }}
+            - name: Install dependencies
+              run: npm ci
+            - name: Build job
+              run: npm run build
+            - name: Upload build artifacts
+              uses: actions/upload-artifacts@v4
+              with:
+                name: dist-file
+                path: dist
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Get build artifacts
+              uses: actions/download-artifacts@v4
+              with:
+                name: dist-file
+            - name: List files
+              run: ls
+            - name: Deploy
+              run: echo "Deploying.."
